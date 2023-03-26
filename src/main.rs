@@ -1,6 +1,7 @@
 use warp::{http::Method, http::StatusCode, reject::Reject, Filter, Rejection, Reply};
 
 use serde::Serialize;
+use std::{collections::HashMap, hash::Hash};
 
 #[tokio::main]
 async fn main() {
@@ -20,7 +21,7 @@ async fn main() {
     warp::serve(routes).run(([127, 0, 0, 1], 3000)).await;
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Eq, Hash, PartialEq)]
 struct QuestionId(String);
 
 #[derive(Debug, Serialize)]
@@ -44,6 +45,24 @@ impl Question {
             content,
             tags,
         }
+    }
+}
+
+struct Store {
+    questions: HashMap<QuestionId, Question>,
+}
+
+impl Store {
+    fn new() -> Self {
+        Store {
+            questions: HashMap::new(),
+        }
+    }
+
+    fn add_question(mut self, question: Question) -> Self {
+        self.questions.insert(question.id.clone(), question);
+
+        self
     }
 }
 
